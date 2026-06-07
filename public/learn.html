@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>慧学习 WiseLearn - 交互式学习</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            color: #2c3e50;
+        }
+
+        /* 顶部导航 */
+        .topbar {
+            background: white;
+            border-bottom: 1px solid #e1e8ed;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+        }
+
+        .source-info {
+            color: #7f8c8d;
+            font-size: 13px;
+            padding: 6px 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            max-width: 400px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            color: #7f8c8d;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .icon-btn:hover {
+            background: #f0f3f7;
+            color: #2c3e50;
+        }
+
+        .icon-btn.primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .icon-btn.primary:hover {
+            background: #2980b9;
+        }
+
+        /* 主体布局 */
+        .layout {
+            display: flex;
+            height: calc(100vh - 57px);
+        }
+
+        /* 左侧大纲 */
+        .sidebar {
+            width: 320px;
+            background: white;
+            border-right: 1px solid #e1e8ed;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header {
+            padding: 20px 24px 16px;
+            border-bottom: 1px solid #f0f3f7;
+        }
+
+        .sidebar-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 4px;
+        }
+
+        .sidebar-subtitle {
+            font-size: 12px;
+            color: #95a5a6;
+        }
+
+        .outline-tree {
+            padding: 12px 0;
+        }
+
+        .tree-node {
+            user-select: none;
+        }
+
+        .tree-node-header {
+            display: flex;
+            align-items: center;
+            padding: 10px 24px;
+            cursor: pointer;
+            transition: all 0.15s;
+            position: relative;
+            font-size: 14px;
+            color: #34495e;
+        }
+
+        .tree-node-header:hover {
+            background: #f0f3f7;
+        }
+
+        .tree-node-header.active {
+            background: linear-gradient(90deg, rgba(52, 152, 219, 0.1), transparent);
+            color: #3498db;
+            font-weight: 500;
+        }
+
+        .tree-node-header.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #3498db;
+        }
+
+        .tree-node-toggle {
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 6px;
+            transition: transform 0.2s;
+            color: #95a5a6;
+            font-size: 10px;
+        }
+
+        .tree-node-toggle.expanded {
+            transform: rotate(90deg);
+        }
+
+        .tree-node-toggle.empty {
+            visibility: hidden;
+        }
+
+        .tree-node-title {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .tree-node-children {
+            display: none;
+        }
+
+        .tree-node-children.expanded {
+            display: block;
+        }
+
+        .tree-node.level-1 .tree-node-header {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .tree-node.level-2 .tree-node-header {
+            padding-left: 48px;
+            font-size: 13px;
+        }
+
+        .tree-node.level-3 .tree-node-header {
+            padding-left: 72px;
+            font-size: 13px;
+            color: #7f8c8d;
+        }
+
+        /* 右侧内容区 */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 40px 60px;
+            background: #f5f7fa;
+        }
+
+        .content-inner {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #95a5a6;
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+
+        .breadcrumb-sep {
+            color: #bdc3c7;
+        }
+
+        .node-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+
+        .node-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 32px;
+            color: #7f8c8d;
+            font-size: 13px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* 标签切换 */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            background: white;
+            padding: 4px;
+            border-radius: 10px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            width: fit-content;
+        }
+
+        .tab {
+            padding: 10px 24px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #7f8c8d;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tab:hover {
+            color: #2c3e50;
+        }
+
+        .tab.active {
+            background: #3498db;
+            color: white;
+            box-shadow: 0 2px 6px rgba(52, 152, 219, 0.3);
+        }
+
+        /* 内容卡片 */
+        .content-card {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            line-height: 1.8;
+            font-size: 15px;
+            color: #34495e;
+            min-height: 300px;
+        }
+
+        .content-card.loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #95a5a6;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            border: 3px solid #ecf0f1;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 12px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .content-text {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .content-text p {
+            margin-bottom: 16px;
+        }
+
+        /* 专业概念 */
+        .concept {
+            color: #3498db;
+            border-bottom: 1px dashed #3498db;
+            cursor: pointer;
+            padding: 0 2px;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .concept:hover {
+            background: rgba(52, 152, 219, 0.1);
+            border-bottom-style: solid;
+        }
+
+        /* 节点导航 */
+        .node-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid #f0f3f7;
+        }
+
+        .nav-btn {
+            padding: 10px 20px;
+            background: white;
+            border: 1px solid #e1e8ed;
+            border-radius: 8px;
+            cursor: pointer;
+            color: #34495e;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background: #f0f3f7;
+            border-color: #bdc3c7;
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* 概念解释侧边栏 */
+        .concept-sidebar {
+            position: fixed;
+            top: 0;
+            right: -460px;
+            width: 460px;
+            height: 100%;
+            background: white;
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.08);
+            z-index: 200;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .concept-sidebar.show {
+            right: 0;
+        }
+
+        .concept-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 199;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .concept-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .concept-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #f0f3f7;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .concept-header-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .concept-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #95a5a6;
+            cursor: pointer;
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        .concept-close:hover {
+            background: #f0f3f7;
+            color: #2c3e50;
+        }
+
+        .concept-body {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            line-height: 1.8;
+            font-size: 14px;
+            color: #34495e;
+        }
+
+        .concept-body.loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #95a5a6;
+        }
+
+        .concept-body p {
+            margin-bottom: 12px;
+        }
+
+        /* 空状态 */
+        .empty {
+            text-align: center;
+            padding: 80px 20px;
+            color: #95a5a6;
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-title {
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: #7f8c8d;
+        }
+
+        .empty-message {
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        /* 响应式 */
+        @media (max-width: 1024px) {
+            .content {
+                padding: 30px 30px;
+            }
+            
+            .node-title {
+                font-size: 26px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .layout {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .sidebar {
+                width: 100%;
+                max-height: 300px;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .concept-sidebar {
+                width: 100%;
+                right: -100%;
+            }
+            
+            .node-title {
+                font-size: 22px;
+            }
+            
+            .content-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航 -->
+    <header class="topbar">
+        <div class="topbar-left">
+            <div class="logo">
+                <div class="logo-icon">慧</div>
+                <span>慧学习 WiseLearn</span>
+            </div>
+            <div class="source-info" id="sourceInfo">加载中...</div>
+        </div>
+        <div class="topbar-right">
+            <button class="icon-btn" id="exportBtn" title="导出学习内容">📥 导出</button>
+            <button class="icon-btn primary" id="newLearnBtn" title="开始新的学习">+ 新的学习</button>
+        </div>
+    </header>
+
+    <!-- 主体 -->
+    <div class="layout">
+        <!-- 左侧大纲 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">📚 知识大纲</div>
+                <div class="sidebar-subtitle" id="outlineMeta">加载中...</div>
+            </div>
+            <div class="outline-tree" id="outlineTree"></div>
+        </aside>
+
+        <!-- 右侧内容 -->
+        <main class="content">
+            <div class="content-inner" id="contentInner">
+                <div class="empty">
+                    <div class="empty-icon">📖</div>
+                    <div class="empty-title">正在加载学习内容...</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 概念解释侧边栏 -->
+    <div class="concept-overlay" id="conceptOverlay"></div>
+    <div class="concept-sidebar" id="conceptSidebar">
+        <div class="concept-header">
+            <div class="concept-header-title">
+                <span>💡</span>
+                <span id="conceptTitle">概念解释</span>
+            </div>
+            <button class="concept-close" id="conceptClose">×</button>
+        </div>
+        <div class="concept-body" id="conceptBody">
+            <div class="loading">
+                <span class="spinner"></span>
+                正在加载概念解释...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== 全局变量 ==========
+        const API_BASE = window.location.origin;
+        let knowledgeData = null;
+        let currentNodeId = null;
+        let currentTab = 'professional';
+
+        // ========== DOM ==========
+        const sourceInfo = document.getElementById('sourceInfo');
+        const outlineTree = document.getElementById('outlineTree');
+        const outlineMeta = document.getElementById('outlineMeta');
+        const contentInner = document.getElementById('contentInner');
+        const conceptOverlay = document.getElementById('conceptOverlay');
+        const conceptSidebar = document.getElementById('conceptSidebar');
+        const conceptTitle = document.getElementById('conceptTitle');
+        const conceptBody = document.getElementById('conceptBody');
+        const conceptClose = document.getElementById('conceptClose');
+        const exportBtn = document.getElementById('exportBtn');
+        const newLearnBtn = document.getElementById('newLearnBtn');
+
+        // ========== 初始化 ==========
+        document.addEventListener('DOMContentLoaded', init);
+
+        function init() {
+            loadKnowledgeData();
+            bindEvents();
+        }
+
+        function bindEvents() {
+            conceptClose.addEventListener('click', closeConceptSidebar);
+            conceptOverlay.addEventListener('click', closeConceptSidebar);
+            exportBtn.addEventListener('click', exportLearning);
+            newLearnBtn.addEventListener('click', () => {
+                if (confirm('确定要开始新的学习吗？当前内容将被清空。')) {
+                    localStorage.removeItem('wiselearn_data');
+                    window.location.href = 'index.html';
+                }
+            });
+        }
+
+        // ========== 数据加载 ==========
+        function loadKnowledgeData() {
+            const data = localStorage.getItem('wiselearn_data');
+            if (!data) {
+                showEmpty();
+                return;
+            }
+            try {
+                knowledgeData = JSON.parse(data);
+                if (!knowledgeData.outline || !knowledgeData.content) {
+                    showEmpty();
+                    return;
+                }
+                renderHeader();
+                renderOutline();
+                const firstId = collectNodeIds(knowledgeData.outline)[0];
+                if (firstId) selectNode(firstId);
+            } catch (e) {
+                console.error('数据解析失败:', e);
+                showEmpty();
+            }
+        }
+
+        function showEmpty() {
+            contentInner.innerHTML = `
+                <div class="empty">
+                    <div class="empty-icon">📚</div>
+                    <div class="empty-title">还没有学习内容</div>
+                    <div class="empty-message">请先上传学习资料并完成解析</div>
+                    <button class="icon-btn primary" onclick="window.location.href='index.html'" style="margin: 0 auto;">
+                        去上传资料
+                    </button>
+                </div>
+            `;
+            outlineTree.innerHTML = '<div style="padding: 20px; color: #95a5a6; text-align: center; font-size: 13px;">暂无内容</div>';
+            outlineMeta.textContent = '0 个知识点';
+            sourceInfo.textContent = '尚未上传资料';
+        }
+
+        function renderHeader() {
+            const files = knowledgeData.sourceFiles || [];
+            sourceInfo.textContent = files.length 
+                ? `📁 ${files.join(' · ')}` 
+                : '未命名学习包';
+            const totalNodes = collectNodeIds(knowledgeData.outline).length;
+            outlineMeta.textContent = `共 ${totalNodes} 个知识点`;
+        }
+
+        // ========== 大纲渲染 ==========
+        function renderOutline() {
+            outlineTree.innerHTML = '';
+            knowledgeData.outline.forEach(node => {
+                outlineTree.appendChild(createTreeNode(node, 1));
+            });
+        }
+
+        function createTreeNode(node, level) {
+            const container = document.createElement('div');
+            container.className = `tree-node level-${level}`;
+            
+            const hasChildren = node.children && node.children.length > 0;
+            
+            const header = document.createElement('div');
+            header.className = 'tree-node-header';
+            header.dataset.id = node.id;
+            header.innerHTML = `
+                <span class="tree-node-toggle ${hasChildren ? '' : 'empty'}">▶</span>
+                <span class="tree-node-title">${escapeHtml(node.title)}</span>
+            `;
+            
+            container.appendChild(header);
+
+            if (hasChildren) {
+                const children = document.createElement('div');
+                children.className = 'tree-node-children expanded';
+                node.children.forEach(child => {
+                    children.appendChild(createTreeNode(child, level + 1));
+                });
+                container.appendChild(children);
+            }
+
+            header.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (hasChildren) {
+                    const toggle = header.querySelector('.tree-node-toggle');
+                    const childContainer = container.querySelector(':scope > .tree-node-children');
+                    const isExpanded = childContainer.classList.contains('expanded');
+                    childContainer.classList.toggle('expanded');
+                    toggle.classList.toggle('expanded');
+                }
+                selectNode(node.id);
+            });
+
+            return container;
+        }
+
+        function selectNode(nodeId) {
+            currentNodeId = nodeId;
+            // 更新选中状态
+            document.querySelectorAll('.tree-node-header').forEach(h => {
+                h.classList.toggle('active', h.dataset.id === nodeId);
+            });
+            renderContent();
+        }
+
+        // ========== 内容渲染 ==========
+        function renderContent() {
+            if (!currentNodeId) return;
+            const node = findNodeById(knowledgeData.outline, currentNodeId);
+            const content = knowledgeData.content[currentNodeId];
+            
+            if (!node || !content) {
+                contentInner.innerHTML = `
+                    <div class="empty">
+                        <div class="empty-icon">🤔</div>
+                        <div class="empty-title">内容未生成</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const breadcrumb = getBreadcrumb(currentNodeId);
+            const currentText = currentTab === 'professional' ? content.professional : content.fable;
+            const totalNodes = collectNodeIds(knowledgeData.outline).length;
+            const nodeIds = collectNodeIds(knowledgeData.outline);
+            const currentIndex = nodeIds.indexOf(currentNodeId);
+            const prevId = currentIndex > 0 ? nodeIds[currentIndex - 1] : null;
+            const nextId = currentIndex < totalNodes - 1 ? nodeIds[currentIndex + 1] : null;
+
+            contentInner.innerHTML = `
+                <div class="breadcrumb">
+                    ${breadcrumb.map((b, i) => `
+                        <span>${escapeHtml(b)}</span>
+                        ${i < breadcrumb.length - 1 ? '<span class="breadcrumb-sep">/</span>' : ''}
+                    `).join('')}
+                </div>
+                <h1 class="node-title">${escapeHtml(node.title)}</h1>
+                <div class="node-meta">
+                    <span class="meta-item">📍 第 ${currentIndex + 1} / ${totalNodes} 个知识点</span>
+                    <span class="meta-item">⏱ 阅读约需 2 分钟</span>
+                </div>
+                <div class="tabs">
+                    <button class="tab ${currentTab === 'professional' ? 'active' : ''}" data-tab="professional">
+                        📘 专业解读
+                    </button>
+                    <button class="tab ${currentTab === 'fable' ? 'active' : ''}" data-tab="fable">
+                        📖 寓言解读
+                    </button>
+                </div>
+                <div class="content-card">
+                    <div class="content-text">${processContent(currentText)}</div>
+                </div>
+                <div class="node-nav">
+                    <button class="nav-btn" id="prevBtn" ${!prevId ? 'disabled' : ''} data-id="${prevId || ''}">
+                        ← 上一个
+                    </button>
+                    <button class="nav-btn" id="nextBtn" ${!nextId ? 'disabled' : ''} data-id="${nextId || ''}>
+                        下一个 →
+                    </button>
+                </div>
+            `;
+
+            // 绑定标签切换
+            contentInner.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    currentTab = tab.dataset.tab;
+                    renderContent();
+                });
+            });
+
+            // 绑定节点导航
+            const prevBtn = contentInner.querySelector('#prevBtn');
+            const nextBtn = contentInner.querySelector('#nextBtn');
+            if (prevBtn && !prevBtn.disabled) {
+                prevBtn.addEventListener('click', () => selectNode(prevBtn.dataset.id));
+            }
+            if (nextBtn && !nextBtn.disabled) {
+                nextBtn.addEventListener('click', () => selectNode(nextBtn.dataset.id));
+            }
+
+            // 绑定概念点击
+            contentInner.querySelectorAll('.concept').forEach(el => {
+                el.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    showConcept(el.dataset.concept);
+                });
+            });
+        }
+
+        function getBreadcrumb(nodeId) {
+            const path = [];
+            function find(nodes, trail) {
+                for (const node of nodes) {
+                    const newTrail = [...trail, node.title];
+                    if (node.id === nodeId) {
+                        path.push(...newTrail);
+                        return true;
+                    }
+                    if (node.children && find(node.children, newTrail)) return true;
+                }
+                return false;
+            }
+            find(knowledgeData.outline, []);
+            return path;
+        }
+
+        // ========== 概念解释 ==========
+        function processContent(text) {
+            if (!text) return '<p style="color: #95a5a6;">暂无内容</p>';
+            // 解析 LLM 标记的概念
+            const html = escapeHtml(text)
+                .replace(/『概念:([^』]+)』/g, (match, name) => {
+                    return `<span class="concept" data-concept="${escapeHtml(name.trim())}">${escapeHtml(name.trim())}</span>`;
+                });
+            return html.split('\n').filter(p => p.trim()).map(p => `<p>${p}</p>`).join('');
+        }
+
+        async function showConcept(concept) {
+            conceptTitle.textContent = concept;
+            conceptBody.className = 'concept-body loading';
+            conceptBody.innerHTML = '<span class="spinner"></span>正在生成详细解释...';
+            openConceptSidebar();
+
+            try {
+                const prompt = `请详细解释专业概念：${concept}
+
+要求：
+1. 给出准确的定义
+2. 解释其核心原理
+3. 提供实际应用案例
+4. 内容约400字，使用通俗易懂但保持专业性`;
+
+                const resp = await fetch(`${API_BASE}/api/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: 'Qwen3.6-27B',
+                        messages: [{ role: 'user', content: prompt }],
+                        temperature: 0.7,
+                        max_tokens: 1500
+                    })
+                });
+
+                if (!resp.ok) {
+                    const err = await resp.json().catch(() => ({}));
+                    throw new Error(err.error || '加载失败');
+                }
+                const data = await resp.json();
+                const text = data.choices?.[0]?.message?.content || '暂无解释';
+                conceptBody.className = 'concept-body';
+                conceptBody.innerHTML = text.split('\n').filter(p => p.trim()).map(p => `<p>${escapeHtml(p)}</p>`).join('');
+            } catch (e) {
+                conceptBody.className = 'concept-body';
+                conceptBody.innerHTML = `<p style="color: #e74c3c;">加载失败：${escapeHtml(e.message)}</p>`;
+            }
+        }
+
+        function openConceptSidebar() {
+            conceptSidebar.classList.add('show');
+            conceptOverlay.classList.add('show');
+        }
+
+        function closeConceptSidebar() {
+            conceptSidebar.classList.remove('show');
+            conceptOverlay.classList.remove('show');
+        }
+
+        // ========== 导出 ==========
+        function exportLearning() {
+            if (!knowledgeData) return;
+            
+            let html = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>${escapeHtml(knowledgeData.sourceFiles?.[0] || '慧学习知识内容')}</title>
+<style>
+    body { font-family: -apple-system, sans-serif; max-width: 800px; margin: 0 auto; padding: 40px 20px; line-height: 1.8; color: #2c3e50; }
+    h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; margin-bottom: 8px; }
+    h2 { color: #34495e; margin-top: 32px; padding: 8px 16px; background: #f0f3f7; border-left: 4px solid #3498db; border-radius: 4px; }
+    h3 { color: #2c3e50; margin-top: 24px; }
+    .section { margin-bottom: 32px; padding: 20px 24px; background: #fafbfc; border-radius: 8px; }
+    .concept { color: #3498db; border-bottom: 1px dashed #3498db; }
+    .meta { color: #7f8c8d; font-size: 13px; margin-bottom: 24px; }
+    .badge { display: inline-block; padding: 2px 10px; background: #3498db; color: white; border-radius: 12px; font-size: 12px; margin-right: 8px; }
+    p { margin-bottom: 12px; }
+    footer { margin-top: 50px; padding-top: 20px; border-top: 1px solid #ecf0f1; color: #95a5a6; font-size: 12px; text-align: center; }
+</style>
+</head>
+<body>
+<h1>📚 慧学习 WiseLearn - 知识内容</h1>
+<p class="meta">导出时间：${new Date().toLocaleString('zh-CN')}</p>
+<p class="meta">资料来源：${(knowledgeData.sourceFiles || []).map(escapeHtml).join(' · ') || '未命名'}</p>
+`;
+
+            function renderNodes(nodes) {
+                let result = '';
+                nodes.forEach(node => {
+                    const content = knowledgeData.content[node.id];
+                    if (content) {
+                        result += `<div class="section">
+<h2>${escapeHtml(node.title)}</h2>
+<h3><span class="badge">📘 专业解读</span></h3>
+<p>${formatContent(content.professional)}</p>
+<h3><span class="badge">📖 寓言解读</span></h3>
+<p>${formatContent(content.fable)}</p>
+</div>
+`;
+                    }
+                    if (node.children) {
+                        result += renderNodes(node.children);
+                    }
+                });
+                return result;
+            }
+
+            html += renderNodes(knowledgeData.outline);
+            html += `<footer>由慧学习 WiseLearn 生成 · ${new Date().getFullYear()}</footer></body></html>`;
+
+            const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `慧学习_${new Date().toISOString().slice(0, 10)}.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function formatContent(text) {
+            if (!text) return '暂无内容';
+            return escapeHtml(text)
+                .replace(/『概念:([^』]+)』/g, '<span class="concept">$1</span>')
+                .split('\n').filter(p => p.trim()).join('</p><p>');
+        }
+
+        // ========== 工具函数 ==========
+        function collectNodeIds(nodes) {
+            const ids = [];
+            function walk(arr) {
+                arr.forEach(n => {
+                    ids.push(n.id);
+                    if (n.children) walk(n.children);
+                });
+            }
+            walk(nodes);
+            return ids;
+        }
+
+        function findNodeById(nodes, id) {
+            for (const node of nodes) {
+                if (node.id === id) return node;
+                if (node.children) {
+                    const found = findNodeById(node.children, id);
+                    if (found) return found;
+                }
+            }
+            return null;
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = String(text);
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
